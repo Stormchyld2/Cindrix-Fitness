@@ -108,7 +108,7 @@ class AppState(context: Context) {
     // ---------- schedule and body ----------
     fun dayKeys(): List<String> = if (daysPerWeek == 5) ALL_DAYS else listOf("Mon", "Wed", "Fri")
 
-    fun setDaysPerWeek(n: Int) {
+    fun chooseDays(n: Int) {
         daysPerWeek = if (n == 5) 5 else 3
         save()
     }

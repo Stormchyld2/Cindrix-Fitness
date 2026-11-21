@@ -173,8 +173,8 @@ fun ProgramScreen(st: AppState, nav: Nav) {
             Text("Training days per week", color = C.txt, fontSize = 15.sp, fontWeight = FontWeight.Bold)
             Muted("3 days is your Hybrid guide. 5 days adds two tactical fitness days (Tuesday and Thursday).")
             Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Chip("3 days", st.daysPerWeek == 3, Modifier.weight(1f)) { st.setDaysPerWeek(3) }
-                Chip("5 days", st.daysPerWeek == 5, Modifier.weight(1f)) { st.setDaysPerWeek(5) }
+                Chip("3 days", st.daysPerWeek == 3, Modifier.weight(1f)) { st.chooseDays(3) }
+                Chip("5 days", st.daysPerWeek == 5, Modifier.weight(1f)) { st.chooseDays(5) }
             }
         }
         CCard {

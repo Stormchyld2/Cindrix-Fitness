@@ -55,9 +55,9 @@ fun NutritionScreen(st: AppState, nav: Nav) {
                 st.saveEntry("nutrition", mapOf("calories" to 0.0, "protein" to 0.0, "water" to 0.0))
             }
         }
-        NavCard("Meal planner", "Plan the week and log meals in one tap") { nav.go(Screen.MealPlanner) }
+        NavCard("Meal planner", "Pick favorites, build the week, export groceries") { nav.go(Screen.MealPlanner) }
         NavCard("Mediterranean eating guide", "What to eat, a plate model and protein sources") { nav.go(Screen.Mediterranean) }
-        NavCard("Shopping list", "Mediterranean staples to check off") { nav.go(Screen.Shopping) }
+        NavCard("Grocery list", "Built from your planned week; share or copy it") { nav.go(Screen.Shopping) }
         Muted("Targets are your guide's defaults (about 2,400 calories, 190 g protein). Change them in Settings. General education, not medical or dietitian advice.", 12)
     }
 }
@@ -102,7 +102,7 @@ fun MediterraneanScreen(nav: Nav) {
         }
         CCard {
             Text("Protein sources that fit", color = C.txt, fontSize = 15.sp, fontWeight = FontWeight.ExtraBold)
-            Muted("Fish and seafood (salmon, sardines, tuna, shrimp), chicken and turkey, eggs, Greek yogurt and cottage cheese, lentils, chickpeas and beans, tofu. Spread protein across 3–4 meals to reach your daily target.")
+            Muted("Fish and seafood (salmon, cod, shrimp, scallops), chicken and turkey, eggs, Greek yogurt, chickpeas and white beans, tofu. Spread protein across 3–4 meals to reach your daily target.")
         }
         CCard {
             Text("Easy swaps", color = C.txt, fontSize = 15.sp, fontWeight = FontWeight.ExtraBold)
@@ -118,34 +118,11 @@ fun MediterraneanScreen(nav: Nav) {
             Text("Sample day", color = C.txt, fontSize = 15.sp, fontWeight = FontWeight.ExtraBold)
             Muted("Breakfast: Greek yogurt, berries, oats and walnuts.")
             Muted("Lunch: chicken, chickpea and vegetable salad with olive oil and lemon.")
-            Muted("Snack: cottage cheese with fruit, or hummus with vegetables.")
+            Muted("Snack: Greek yogurt with fruit, or hummus with carrot sticks.")
             Muted("Dinner: baked salmon, roasted vegetables, brown rice.")
             Muted("Log it in the tracker and check calories and protein against your targets.", 12)
         }
         Muted("General education, not medical or dietitian advice. Talk to a clinician about allergies, conditions or medications.", 12)
-    }
-}
-
-private val SHOPPING = listOf(
-    "Produce" to listOf("Leafy greens", "Tomatoes", "Cucumbers", "Peppers", "Onions and garlic", "Lemons", "Berries", "Apples or oranges"),
-    "Protein" to listOf("Salmon or other fish", "Canned tuna or sardines", "Chicken breast", "Eggs", "Greek yogurt", "Cottage cheese"),
-    "Pantry" to listOf("Extra-virgin olive oil", "Oats", "Brown rice", "Whole-grain bread or pasta", "Lentils", "Chickpeas", "Canned beans"),
-    "Extras" to listOf("Almonds and walnuts", "Hummus", "Herbs and spices", "Feta or parmesan"),
-)
-
-@Composable
-fun ShoppingScreen(st: AppState, nav: Nav) {
-    Page {
-        Header("Shopping list", "Mediterranean staples", onBack = { nav.back() })
-        SHOPPING.forEach { (cat, list) ->
-            CCard {
-                Text(cat, color = C.acc, fontSize = 14.sp, fontWeight = FontWeight.Bold)
-                list.forEach { it2 ->
-                    val on = it2 in st.shopChecked
-                    Chip((if (on) "✓ " else "") + it2, on, Modifier.fillMaxWidth().padding(top = 4.dp)) { st.toggleShop(it2) }
-                }
-            }
-        }
     }
 }
 

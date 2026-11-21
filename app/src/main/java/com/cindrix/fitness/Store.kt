@@ -96,8 +96,13 @@ class AppState(context: Context) {
         private set
     var startDate by mutableStateOf(today())
         private set
-    var mealPlan by mutableStateOf<Map<String, Meal>>(emptyMap())
+    var favorites by mutableStateOf<Set<String>>(emptySet())
         private set
+    var menus by mutableStateOf<Map<String, Map<String, String>>>(emptyMap())
+        private set
+    var people by mutableIntStateOf(2)
+        private set
+    var weekOffset by mutableIntStateOf(0)
     var daysPerWeek by mutableIntStateOf(3)
         private set
     var heightIn by mutableIntStateOf(0)
@@ -122,19 +127,40 @@ class AppState(context: Context) {
 
     fun workoutTarget(): Int = daysPerWeek
 
-    // ---------- meal planner ----------
-    fun setMeal(key: String, meal: Meal?) {
-        mealPlan = if (meal == null) mealPlan - key else mealPlan + (key to meal)
+    // ---------- recipes, menu and groceries ----------
+    fun viewWeek(): String = weekKeyFor(weekOffset)
+
+    fun menuFor(wk: String): Map<String, String> = menus[wk].orEmpty()
+
+    fun toggleFav(id: String) {
+        favorites = if (id in favorites) favorites - id else favorites + id
         save()
     }
 
-    fun autoFillMeals() {
-        mealPlan = MealLib.autoFill()
+    fun buildMenu(wk: String) {
+        val prev = menus[LocalDate.parse(wk).minusWeeks(1).toString()]?.values?.toSet().orEmpty()
+        menus = menus + (wk to MenuBuilder.build(favorites, prev, wk.hashCode().toLong() + menus.size))
         save()
     }
 
-    fun clearMeals() {
-        mealPlan = emptyMap()
+    fun setSlot(wk: String, key: String, id: String?) {
+        val cur = menuFor(wk)
+        menus = menus + (wk to (if (id == null) cur - key else cur + (key to id)))
+        save()
+    }
+
+    fun clearMenu(wk: String) {
+        menus = menus - wk
+        save()
+    }
+
+    fun choosePeople(n: Int) {
+        people = n.coerceIn(1, 10)
+        save()
+    }
+
+    fun clearChecks(prefix: String) {
+        shopChecked = shopChecked.filterNot { it.startsWith(prefix) }.toSet()
         save()
     }
 
@@ -232,7 +258,7 @@ class AppState(context: Context) {
         xp = 0; bandUps = 0; questsPaid = emptySet(); shopChecked = emptySet(); goals = Goals()
         startDate = today()
         daysPerWeek = 3
-        mealPlan = emptyMap()
+        favorites = emptySet(); menus = emptyMap(); people = 2
         save()
     }
 
@@ -317,7 +343,9 @@ class AppState(context: Context) {
         o.put("start", startDate)
         o.put("xp", xp)
         o.put("days", daysPerWeek)
-        o.put("meals", JSONObject().also { mo -> mealPlan.forEach { (k, m) -> mo.put(k, JSONObject().put("n", m.name).put("c", m.cal).put("p", m.pro)) } })
+        o.put("favs", JSONArray(favorites.toList()))
+        o.put("people", people)
+        o.put("menus", JSONObject().also { mo -> menus.forEach { (wk, m) -> mo.put(wk, JSONObject(m.mapValues { it.value })) } })
         o.put("height", heightIn)
         o.put("bandUps", bandUps)
         o.put("goals", JSONObject().put("c", goals.calories).put("p", goals.protein).put("w", goals.water).put("s", goals.steps))
@@ -350,15 +378,13 @@ class AppState(context: Context) {
             xp = o.optInt("xp", 0)
             daysPerWeek = if (o.optInt("days", 3) == 5) 5 else 3
             heightIn = o.optInt("height", 0)
-            o.optJSONObject("meals")?.let { mo ->
-                mealPlan = mo.keys().asSequence().associateWith { k ->
-                    val x = mo.getJSONObject(k)
-                    Meal(x.getString("n"), x.getInt("c"), x.getInt("p"))
+            favorites = strings(o.optJSONArray("favs"))
+            people = o.optInt("people", 2).coerceIn(1, 10)
+            o.optJSONObject("menus")?.let { mo ->
+                menus = mo.keys().asSequence().associateWith { wk ->
+                    val m = mo.getJSONObject(wk)
+                    m.keys().asSequence().associateWith { k -> m.getString(k) }
                 }
-            }
-            bandUps = o.optInt("bandUps", 0)
-            o.optJSONObject("goals")?.let {
-                goals = Goals(it.optInt("c", 2400), it.optInt("p", 190), it.optInt("w", 100), it.optInt("s", 6000))
             }
             questsPaid = strings(o.optJSONArray("questsPaid"))
             shopChecked = strings(o.optJSONArray("shop"))

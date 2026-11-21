@@ -53,6 +53,8 @@ sealed interface Screen {
     data object Nutrition : Screen
     data object Mediterranean : Screen
     data object MealPlanner : Screen
+    data object Recipes : Screen
+    data class Recipe(val id: String) : Screen
     data object Shopping : Screen
     data object Settings : Screen
     data object TimerHub : Screen
@@ -143,6 +145,8 @@ fun AppRoot(st: AppState) {
                 Screen.Nutrition -> NutritionScreen(st, nav)
                 Screen.Mediterranean -> MediterraneanScreen(nav)
                 Screen.MealPlanner -> MealPlannerScreen(st, nav)
+                Screen.Recipes -> RecipesScreen(st, nav)
+                is Screen.Recipe -> RecipeScreen(st, nav, s.id)
                 Screen.Shopping -> ShoppingScreen(st, nav)
                 Screen.Settings -> SettingsScreen(st, nav)
                 Screen.TimerHub -> TimerHubScreen(nav)

@@ -9,6 +9,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Recipes.load(applicationContext)
         state = AppState(applicationContext)
         setContent {
             CindrixTheme {

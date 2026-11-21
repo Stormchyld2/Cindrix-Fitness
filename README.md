@@ -4,7 +4,7 @@ Offline Android app built around the Hybrid Muscle, Fat Loss and Boxing program:
 
 ## Status
 
-Planning and design. No app code yet. Mockups now show the exercise how-to pop-up, trackers and rewards.
+Planning and design. No app code yet. Mockups show the exercise how-to pop-up, trackers and rewards. Direction: customizable workouts, nutrition with a Mediterranean guide. See docs/app-plan.md.
 
 ## What is here
 

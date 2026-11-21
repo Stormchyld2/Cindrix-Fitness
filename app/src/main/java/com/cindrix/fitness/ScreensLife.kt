@@ -178,6 +178,7 @@ fun SettingsScreen(st: AppState, nav: Nav) {
     var pro by remember { mutableStateOf(st.goals.protein.toString()) }
     var wat by remember { mutableStateOf(st.goals.water.toString()) }
     var stp by remember { mutableStateOf(st.goals.steps.toString()) }
+    var hgt by remember { mutableStateOf(if (st.heightIn > 0) st.heightIn.toString() else "") }
     var confirm by remember { mutableStateOf(false) }
     Page {
         Header("Settings", "Targets and data", onBack = { nav.back() })
@@ -203,6 +204,13 @@ fun SettingsScreen(st: AppState, nav: Nav) {
                         ),
                     )
                 }
+            }
+        }
+        CCard {
+            Text("Body", color = C.txt, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+            NumField("Height (inches)", hgt, Modifier.fillMaxWidth().padding(top = 6.dp)) { hgt = it }
+            Row(Modifier.padding(top = 8.dp)) {
+                PrimaryButton("Save height", Modifier.fillMaxWidth()) { st.setHeight(hgt.toDoubleOrNull()?.toInt() ?: 0) }
             }
         }
         CCard {

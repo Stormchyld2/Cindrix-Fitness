@@ -24,7 +24,9 @@ private val TRACKERS = listOf(
     TrackerDef("measure", "Measurements", "Waist, chest, hips, arm and thigh in inches.",
         listOf("waist" to "Waist (in)", "chest" to "Chest (in)", "hips" to "Hips (in)", "arm" to "Arm (in)", "thigh" to "Thigh (in)")),
     TrackerDef("recovery", "Recovery", "Sleep, energy and soreness.",
-        listOf("sleep" to "Sleep (hours)", "energy" to "Energy (1–10)", "soreness" to "Soreness (1–10)")),
+        listOf("sleep" to "Sleep (hours)", "energy" to "Energy (1–10)", "soreness" to "Soreness (1–10)", "rhr" to "Resting heart rate (bpm)")),
+    TrackerDef("fitness", "Tactical fitness test", "Retest every 4 weeks under the same conditions.",
+        listOf("pushups" to "Push-ups (max in 2 min)", "plank" to "Plank hold (seconds)", "run" to "1.5-mile run (minutes)")),
     TrackerDef("steps", "Walking", "Daily steps toward your target.", listOf("steps" to "Steps")),
     TrackerDef("boxing", "Boxing rounds", "Rounds logged from the timer or by hand.", listOf("rounds" to "Rounds today")),
     TrackerDef("slam", "Slam ball rounds", "Rounds logged from the timer or by hand.", listOf("rounds" to "Rounds today")),
@@ -43,16 +45,40 @@ fun ProgressScreen(st: AppState, nav: Nav) {
                 Stat("${st.bandUps}", "band-ups")
             }
         }
+        BodyMetricsCard(st)
         CCard {
             Text("Body weight", color = C.txt, fontSize = 14.sp, fontWeight = FontWeight.Bold)
             LineChart(weights.map { it.toFloat() }.takeLast(12), st.entriesFor("weight").takeLast(12).map { it.date.takeLast(5) })
         }
-        NavCard("Trackers", "Weight, measurements, recovery, walking, rounds") { nav.go(Screen.Trackers) }
+        NavCard("Trackers", "Weight, measurements, recovery, tactical fitness test, walking, rounds") { nav.go(Screen.Trackers) }
         NavCard("Band levels", "See and set the band for every move") { nav.go(Screen.BandLevels) }
         NavCard("Workout log", "${st.workouts.size} workouts completed") { nav.go(Screen.WorkoutHistory) }
         NavCard("Rewards", "${st.rank()} · level ${st.level()} · badges") { nav.go(Screen.Rewards) }
         NavCard("Nutrition", "Calories, protein, water and the Mediterranean guide") { nav.go(Screen.Nutrition) }
         NavCard("Joint check guide", "Green, yellow and red zones") { nav.go(Screen.Joint) }
+    }
+}
+
+@Composable
+private fun BodyMetricsCard(st: AppState) {
+    val w = st.entriesFor("weight").mapNotNull { it.values["weight"] }
+    val waist = st.entriesFor("measure").mapNotNull { it.values["waist"] }.lastOrNull()
+    val h = st.heightIn
+    CCard {
+        Text("Body metrics", color = C.txt, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+        if (w.isEmpty()) {
+            Muted("Log your weight in Trackers to see change over time.")
+        } else {
+            val change = w.last() - w.first()
+            Muted("Weight ${fmt(w.last())} lb · ${if (change >= 0) "+" else ""}${fmt(change)} lb since your first entry")
+        }
+        if (h > 0 && w.isNotEmpty()) {
+            Muted("BMI ${"%.1f".format(703.0 * w.last() / (h.toDouble() * h))} (a rough screen; it ignores muscle mass)")
+        }
+        if (h > 0 && waist != null) {
+            Muted("Waist-to-height ${"%.2f".format(waist / h)} (lower is generally better; under 0.50 is a common target)")
+        }
+        if (h == 0) Muted("Add your height in Settings to see BMI and waist-to-height.", 12)
     }
 }
 

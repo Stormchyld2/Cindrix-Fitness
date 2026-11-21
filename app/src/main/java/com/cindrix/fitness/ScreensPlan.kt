@@ -43,17 +43,12 @@ import androidx.compose.ui.unit.sp
 import java.time.DayOfWeek
 import java.time.LocalDate
 
-private fun dayKeyFor(d: DayOfWeek): String? = when (d) {
-    DayOfWeek.MONDAY -> "Mon"
-    DayOfWeek.WEDNESDAY -> "Wed"
-    DayOfWeek.FRIDAY -> "Fri"
-    else -> null
-}
+private fun dayKeyFor(d: DayOfWeek, keys: List<String>): String? =
+    ALL_DAYS.getOrNull(d.value - 1)?.takeIf { it in keys }
 
-private fun nextDayKey(d: DayOfWeek): String = when (d) {
-    DayOfWeek.TUESDAY -> "Wed"
-    DayOfWeek.THURSDAY -> "Fri"
-    else -> "Mon"
+private fun nextDayKey(d: DayOfWeek, keys: List<String>): String {
+    val idx = d.value - 1
+    return (1..7).map { (idx + it) % 7 }.mapNotNull { ALL_DAYS.getOrNull(it) }.firstOrNull { it in keys } ?: keys.first()
 }
 
 private fun strengthCount(items: List<PlanItem>): Int =
@@ -62,8 +57,9 @@ private fun strengthCount(items: List<PlanItem>): Int =
 @Composable
 fun TodayScreen(st: AppState, nav: Nav) {
     val dow = LocalDate.now().dayOfWeek
-    val todayKey = dayKeyFor(dow)
-    val key = todayKey ?: nextDayKey(dow)
+    val keys = st.dayKeys()
+    val todayKey = dayKeyFor(dow, keys)
+    val key = todayKey ?: nextDayKey(dow, keys)
     val wkStart = weekStart(LocalDate.now()).toString()
     Page {
         Header(
@@ -117,7 +113,7 @@ fun TodayScreen(st: AppState, nav: Nav) {
             Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(5.dp)) {
                 val labels = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
                 labels.forEachIndexed { i, d ->
-                    val planned = DAY_KEYS.contains(d)
+                    val planned = keys.contains(d)
                     val done = planned && st.workouts.any { it.day == d && weekKey(it.date) == wkStart }
                     val isToday = dow.value == i + 1
                     Column(
@@ -137,7 +133,7 @@ fun TodayScreen(st: AppState, nav: Nav) {
                 Text("Weekly quests", color = C.txt, fontSize = 15.sp, fontWeight = FontWeight.Bold)
                 Text("+150 XP when all done", color = C.mut, fontSize = 12.sp)
             }
-            Quest("3 workouts", st.workoutsThisWeek(), 3)
+            Quest("${st.workoutTarget()} workouts", st.workoutsThisWeek(), st.workoutTarget())
             Quest("Protein target, 5 days", st.proteinDaysThisWeek(), 5)
             Quest("Walking target, 4 days", st.stepDaysThisWeek(), 4)
         }
@@ -174,6 +170,14 @@ fun ProgramScreen(st: AppState, nav: Nav) {
     Page {
         Header("Program", "Hybrid Muscle, Fat Loss and Boxing · week ${st.programWeek()} of 12")
         CCard {
+            Text("Training days per week", color = C.txt, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+            Muted("3 days is your Hybrid guide. 5 days adds two tactical fitness days (Tuesday and Thursday).")
+            Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Chip("3 days", st.daysPerWeek == 3, Modifier.weight(1f)) { st.setDaysPerWeek(3) }
+                Chip("5 days", st.daysPerWeek == 5, Modifier.weight(1f)) { st.setDaysPerWeek(5) }
+            }
+        }
+        CCard {
             Text("Plan style: $mode", color = C.txt, fontSize = 15.sp, fontWeight = FontWeight.Bold)
             Muted("Varied days keeps every strength move different across the three days by using your guide's own substitute movements on Friday. You can change any exercise.")
             Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -181,7 +185,7 @@ fun ProgramScreen(st: AppState, nav: Nav) {
                 OutlineButton("Guide as written", Modifier.weight(1f)) { st.usePreset(false) }
             }
         }
-        DAY_KEYS.forEach { d ->
+        st.dayKeys().forEach { d ->
             val items = st.plan[d].orEmpty()
             CCard(onClick = { nav.go(Screen.DayEditor(d)) }) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -340,7 +344,7 @@ fun GroupChips(selected: String, onPick: (String) -> Unit) {
 fun WorkoutsScreen(st: AppState, nav: Nav) {
     Page {
         Header("Workouts", "Pick a day, or open the round timer")
-        DAY_KEYS.forEach { d ->
+        st.dayKeys().forEach { d ->
             val items = st.plan[d].orEmpty()
             CCard(onClick = { nav.go(Screen.WorkoutDay(d)) }) {
                 Text(DAY_TITLES.getValue(d).substringBefore(" ·").uppercase(), color = C.acc, fontSize = 12.sp, fontWeight = FontWeight.Bold)

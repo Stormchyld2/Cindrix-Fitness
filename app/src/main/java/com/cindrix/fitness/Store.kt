@@ -22,13 +22,16 @@ data class Entry(val date: String, val tracker: String, val values: Map<String, 
 data class Goals(val calories: Int = 2400, val protein: Int = 190, val water: Int = 100, val steps: Int = 6000)
 data class Badge(val name: String, val how: String, val earned: Boolean)
 
-val DAY_KEYS = listOf("Mon", "Wed", "Fri")
+val ALL_DAYS = listOf("Mon", "Tue", "Wed", "Thu", "Fri")
 val DAY_TITLES = mapOf(
     "Mon" to "Monday · Chest + Back + Arms + Heavy Bag",
     "Wed" to "Wednesday · Legs + Glutes + Hamstrings + Core + Boxing Machine",
     "Fri" to "Friday · Full Body + Shoulders + Chest + Triceps + Heavy Bag",
+    "Tue" to "Tuesday · Tactical Strength + Conditioning Circuit",
+    "Thu" to "Thursday · Tactical Endurance + Core + Heavy Bag",
 )
-val DAY_SHORT = mapOf("Mon" to "Chest + Back + Arms", "Wed" to "Legs + Glutes + Core", "Fri" to "Full Body + Shoulders")
+val DAY_SHORT = mapOf("Mon" to "Chest + Back + Arms", "Wed" to "Legs + Glutes + Core", "Fri" to "Full Body + Shoulders",
+    "Tue" to "Tactical strength + circuit", "Thu" to "Tactical endurance + core")
 val BANDS = listOf(15, 25, 35, 45, 55)
 
 fun today(): String = LocalDate.now().toString()
@@ -43,7 +46,14 @@ fun item(id: String): PlanItem {
 object Presets {
     private fun list(vararg ids: String) = ids.map { item(it) }
 
-    val guide: Map<String, List<PlanItem>> = mapOf(
+    private val tactical: Map<String, List<PlanItem>> = mapOf(
+        "Tue" to list("warmup", "push_up", "reverse_lunge", "bent_over_row", "glute_bridge", "plank",
+            "tactical_circuit", "cooldown"),
+        "Thu" to list("warmup", "loaded_carry", "bear_crawl", "flutter_kick", "plank", "sprint_intervals",
+            "heavy_bag", "cooldown"),
+    )
+
+    val guide: Map<String, List<PlanItem>> = tactical + mapOf(
         "Mon" to list("warmup", "chest_press", "seated_row", "lat_pulldown", "triceps_pressdown", "bar_curl",
             "dead_bug", "slam_ball", "heavy_bag", "cooldown"),
         "Wed" to list("warmup", "band_bar_squat", "pull_through", "hamstring_curl", "glute_kickback", "pallof_press",
@@ -53,7 +63,7 @@ object Presets {
     )
 
     // Friday uses the guide's own substitute movements so no strength move repeats across the three days.
-    val varied: Map<String, List<PlanItem>> = mapOf(
+    val varied: Map<String, List<PlanItem>> = tactical + mapOf(
         "Mon" to guide.getValue("Mon"),
         "Wed" to guide.getValue("Wed"),
         "Fri" to list("warmup", "box_squat", "overhead_press", "face_pull", "single_arm_chest_press",
@@ -86,10 +96,29 @@ class AppState(context: Context) {
         private set
     var startDate by mutableStateOf(today())
         private set
+    var daysPerWeek by mutableIntStateOf(3)
+        private set
+    var heightIn by mutableIntStateOf(0)
+        private set
 
     init {
         load()
     }
+
+    // ---------- schedule and body ----------
+    fun dayKeys(): List<String> = if (daysPerWeek == 5) ALL_DAYS else listOf("Mon", "Wed", "Fri")
+
+    fun setDaysPerWeek(n: Int) {
+        daysPerWeek = if (n == 5) 5 else 3
+        save()
+    }
+
+    fun setHeight(inches: Int) {
+        heightIn = inches.coerceIn(0, 100)
+        save()
+    }
+
+    fun workoutTarget(): Int = daysPerWeek
 
     // ---------- plan ----------
     fun setPlan(day: String, items: List<PlanItem>) {
@@ -184,6 +213,7 @@ class AppState(context: Context) {
         setLogs = emptyList(); workouts = emptyList(); entries = emptyList(); bands = emptyMap()
         xp = 0; bandUps = 0; questsPaid = emptySet(); shopChecked = emptySet(); goals = Goals()
         startDate = today()
+        daysPerWeek = 3
         save()
     }
 
@@ -222,7 +252,7 @@ class AppState(context: Context) {
     fun stepDaysThisWeek(): Int =
         daysWith("steps", "steps", goals.steps.toDouble(), weekStart(LocalDate.now()).toString())
 
-    fun questsDone(): Boolean = workoutsThisWeek() >= 3 && proteinDaysThisWeek() >= 5 && stepDaysThisWeek() >= 4
+    fun questsDone(): Boolean = workoutsThisWeek() >= workoutTarget() && proteinDaysThisWeek() >= 5 && stepDaysThisWeek() >= 4
 
     private fun checkQuests() {
         val wk = weekStart(LocalDate.now()).toString()
@@ -235,9 +265,9 @@ class AppState(context: Context) {
     fun streakWeeks(): Int {
         var wk = weekStart(LocalDate.now())
         var n = 0
-        if (workoutsInWeek(wk.toString()) >= 3) n++
+        if (workoutsInWeek(wk.toString()) >= workoutTarget()) n++
         wk = wk.minusWeeks(1)
-        while (workoutsInWeek(wk.toString()) >= 3) {
+        while (workoutsInWeek(wk.toString()) >= workoutTarget()) {
             n++
             wk = wk.minusWeeks(1)
         }
@@ -245,7 +275,7 @@ class AppState(context: Context) {
     }
 
     fun badges(): List<Badge> {
-        val cleanWeek = workouts.groupBy { weekKey(it.date) }.any { (_, l) -> l.size >= 3 && l.none { it.flagged } }
+        val cleanWeek = workouts.groupBy { weekKey(it.date) }.any { (_, l) -> l.size >= workoutTarget() && l.none { it.flagged } }
         val rounds = entries.filter { it.tracker == "boxing" }.sumOf { it.values["rounds"] ?: 0.0 }
         val week = programWeek()
         val done = workouts.size
@@ -253,8 +283,8 @@ class AppState(context: Context) {
             Badge("First workout", "Finish one workout", done >= 1),
             Badge("First band-up", "Move up a band", bandUps >= 1),
             Badge("10 sessions", "Finish 10 workouts", done >= 10),
-            Badge("4-week streak", "3 workouts a week, 4 weeks running", streakWeeks() >= 4),
-            Badge("Clean week", "3 workouts, no yellow or red sets", cleanWeek),
+            Badge("4-week streak", "Hit your weekly workout days, 4 weeks running", streakWeeks() >= 4),
+            Badge("Clean week", "Finish every planned workout with no yellow or red sets", cleanWeek),
             Badge("5 boxing rounds", "Log 5 boxing rounds", rounds >= 5),
             Badge("Protein week", "Hit protein 5 days in a week", questsPaid.isNotEmpty() || proteinDaysThisWeek() >= 5),
             Badge("8-week check", "Reach week 8 with 18+ workouts", week >= 8 && done >= 18),
@@ -267,6 +297,8 @@ class AppState(context: Context) {
         val o = JSONObject()
         o.put("start", startDate)
         o.put("xp", xp)
+        o.put("days", daysPerWeek)
+        o.put("height", heightIn)
         o.put("bandUps", bandUps)
         o.put("goals", JSONObject().put("c", goals.calories).put("p", goals.protein).put("w", goals.water).put("s", goals.steps))
         o.put("questsPaid", JSONArray(questsPaid.toList()))
@@ -296,6 +328,8 @@ class AppState(context: Context) {
             val o = JSONObject(raw)
             startDate = o.optString("start", today())
             xp = o.optInt("xp", 0)
+            daysPerWeek = if (o.optInt("days", 3) == 5) 5 else 3
+            heightIn = o.optInt("height", 0)
             bandUps = o.optInt("bandUps", 0)
             o.optJSONObject("goals")?.let {
                 goals = Goals(it.optInt("c", 2400), it.optInt("p", 190), it.optInt("w", 100), it.optInt("s", 6000))
@@ -316,7 +350,7 @@ class AppState(context: Context) {
                     }
                     m[d] = l
                 }
-                if (m.isNotEmpty()) plan = m
+                if (m.isNotEmpty()) plan = Presets.varied + m
             }
             val sa = o.optJSONArray("sets")
             if (sa != null) {

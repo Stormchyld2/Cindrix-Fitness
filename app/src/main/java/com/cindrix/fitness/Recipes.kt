@@ -205,6 +205,7 @@ object Grocery {
             val r = Recipes.byId[id] ?: continue
             val factor = people.toDouble() / r.servings
             for (line in r.ingredients) {
+                if (line.trim().endsWith(":")) continue
                 var qty: Double? = null
                 var unit = ""
                 var rest = line.trim()

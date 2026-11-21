@@ -18,20 +18,20 @@
    "title": "Today",
    "is_interactive": true
   },
-  "Program.dc.html": {
+  "Rewards.dc.html": {
    "x": 470,
    "y": 0,
    "w": 390,
    "h": 844,
-   "title": "Program",
+   "title": "Rank and rewards",
    "is_interactive": true
   },
-  "Progress.dc.html": {
+  "Program.dc.html": {
    "x": 940,
    "y": 0,
    "w": 390,
    "h": 844,
-   "title": "Progress",
+   "title": "Program",
    "is_interactive": true
   },
   "Workout.dc.html": {
@@ -39,42 +39,69 @@
    "y": 0,
    "w": 390,
    "h": 844,
-   "title": "Workout A",
+   "title": "Monday workout",
+   "is_interactive": true
+  },
+  "Modal.dc.html": {
+   "x": 1880,
+   "y": 0,
+   "w": 390,
+   "h": 844,
+   "title": "Exercise how-to modal",
    "is_interactive": true
   },
   "Exercise.dc.html": {
-   "x": 1880,
+   "x": 2350,
    "y": 0,
    "w": 390,
    "h": 844,
    "title": "Active set",
    "is_interactive": true
   },
+  "Progress.dc.html": {
+   "x": 2820,
+   "y": 0,
+   "w": 390,
+   "h": 844,
+   "title": "Progress",
+   "is_interactive": true
+  },
+  "Track.dc.html": {
+   "x": 3290,
+   "y": 0,
+   "w": 390,
+   "h": 844,
+   "title": "Trackers",
+   "is_interactive": true
+  },
+  "Joint.dc.html": {
+   "x": 3760,
+   "y": 0,
+   "w": 390,
+   "h": 844,
+   "title": "Joint and pain",
+   "is_interactive": true
+  },
   "Library.dc.html": {
-   "x": 2350,
+   "x": 4230,
    "y": 0,
    "w": 390,
    "h": 844,
    "title": "Exercise library",
    "is_interactive": true
-  },
-  "Detail.dc.html": {
-   "x": 2820,
-   "y": 0,
-   "w": 390,
-   "h": 844,
-   "title": "Exercise detail",
-   "is_interactive": true
   }
  },
  "order": [
   "Main.dc.html",
+  "Rewards.dc.html",
   "Program.dc.html",
-  "Progress.dc.html",
   "Workout.dc.html",
+  "Modal.dc.html",
   "Exercise.dc.html",
-  "Library.dc.html",
-  "Detail.dc.html"
+  "Progress.dc.html",
+  "Track.dc.html",
+  "Joint.dc.html",
+  "Library.dc.html"
  ],
  "notes": {
   "t": {
@@ -82,7 +109,7 @@
    "y": -260,
    "text": "Cindrix Fitness",
    "kind": "title1",
-   "maxW": 3210
+   "maxW": 4620
   }
  },
  "designSystems": []

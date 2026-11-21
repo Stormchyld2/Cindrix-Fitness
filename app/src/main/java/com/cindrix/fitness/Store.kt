@@ -96,6 +96,8 @@ class AppState(context: Context) {
         private set
     var startDate by mutableStateOf(today())
         private set
+    var mealPlan by mutableStateOf<Map<String, Meal>>(emptyMap())
+        private set
     var daysPerWeek by mutableIntStateOf(3)
         private set
     var heightIn by mutableIntStateOf(0)
@@ -119,6 +121,22 @@ class AppState(context: Context) {
     }
 
     fun workoutTarget(): Int = daysPerWeek
+
+    // ---------- meal planner ----------
+    fun setMeal(key: String, meal: Meal?) {
+        mealPlan = if (meal == null) mealPlan - key else mealPlan + (key to meal)
+        save()
+    }
+
+    fun autoFillMeals() {
+        mealPlan = MealLib.autoFill()
+        save()
+    }
+
+    fun clearMeals() {
+        mealPlan = emptyMap()
+        save()
+    }
 
     // ---------- plan ----------
     fun setPlan(day: String, items: List<PlanItem>) {
@@ -214,6 +232,7 @@ class AppState(context: Context) {
         xp = 0; bandUps = 0; questsPaid = emptySet(); shopChecked = emptySet(); goals = Goals()
         startDate = today()
         daysPerWeek = 3
+        mealPlan = emptyMap()
         save()
     }
 
@@ -298,6 +317,7 @@ class AppState(context: Context) {
         o.put("start", startDate)
         o.put("xp", xp)
         o.put("days", daysPerWeek)
+        o.put("meals", JSONObject().also { mo -> mealPlan.forEach { (k, m) -> mo.put(k, JSONObject().put("n", m.name).put("c", m.cal).put("p", m.pro)) } })
         o.put("height", heightIn)
         o.put("bandUps", bandUps)
         o.put("goals", JSONObject().put("c", goals.calories).put("p", goals.protein).put("w", goals.water).put("s", goals.steps))
@@ -330,6 +350,12 @@ class AppState(context: Context) {
             xp = o.optInt("xp", 0)
             daysPerWeek = if (o.optInt("days", 3) == 5) 5 else 3
             heightIn = o.optInt("height", 0)
+            o.optJSONObject("meals")?.let { mo ->
+                mealPlan = mo.keys().asSequence().associateWith { k ->
+                    val x = mo.getJSONObject(k)
+                    Meal(x.getString("n"), x.getInt("c"), x.getInt("p"))
+                }
+            }
             bandUps = o.optInt("bandUps", 0)
             o.optJSONObject("goals")?.let {
                 goals = Goals(it.optInt("c", 2400), it.optInt("p", 190), it.optInt("w", 100), it.optInt("s", 6000))

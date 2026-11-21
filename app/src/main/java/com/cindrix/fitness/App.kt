@@ -52,6 +52,7 @@ sealed interface Screen {
     data object Joint : Screen
     data object Nutrition : Screen
     data object Mediterranean : Screen
+    data object MealPlanner : Screen
     data object Shopping : Screen
     data object Settings : Screen
     data object TimerHub : Screen
@@ -141,6 +142,7 @@ fun AppRoot(st: AppState) {
                 Screen.Joint -> JointScreen(st, nav)
                 Screen.Nutrition -> NutritionScreen(st, nav)
                 Screen.Mediterranean -> MediterraneanScreen(nav)
+                Screen.MealPlanner -> MealPlannerScreen(st, nav)
                 Screen.Shopping -> ShoppingScreen(st, nav)
                 Screen.Settings -> SettingsScreen(st, nav)
                 Screen.TimerHub -> TimerHubScreen(nav)

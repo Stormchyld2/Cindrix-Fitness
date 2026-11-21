@@ -55,6 +55,7 @@ fun NutritionScreen(st: AppState, nav: Nav) {
                 st.saveEntry("nutrition", mapOf("calories" to 0.0, "protein" to 0.0, "water" to 0.0))
             }
         }
+        NavCard("Meal planner", "Plan the week and log meals in one tap") { nav.go(Screen.MealPlanner) }
         NavCard("Mediterranean eating guide", "What to eat, a plate model and protein sources") { nav.go(Screen.Mediterranean) }
         NavCard("Shopping list", "Mediterranean staples to check off") { nav.go(Screen.Shopping) }
         Muted("Targets are your guide's defaults (about 2,400 calories, 190 g protein). Change them in Settings. General education, not medical or dietitian advice.", 12)
@@ -84,6 +85,7 @@ private fun NumField(label: String, value: String, modifier: Modifier, onChange:
 fun MediterraneanScreen(nav: Nav) {
     Page {
         Header("Mediterranean eating", "A pattern, not a strict diet", onBack = { nav.back() })
+        PrimaryButton("Open the meal planner") { nav.go(Screen.MealPlanner) }
         CCard {
             Text("The idea", color = C.txt, fontSize = 15.sp, fontWeight = FontWeight.ExtraBold)
             Muted("Mostly plants, olive oil as the main fat, fish and seafood often, modest poultry, eggs and dairy, red meat rarely, and little sugar or processed food. It fits a high-protein muscle and fat-loss plan when you build meals around lean protein.")
